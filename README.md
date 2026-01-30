@@ -29,14 +29,14 @@ backend/src/
 
 **Base URL:** `http://localhost:3000/api`
 
-| Método    | Ruta          | Descripción |
-|--------   |------         |-------------|
-| GET       | /health       | Estado del servidor 
-| GET       | /pets         | Listar todas las mascotas 
-| GET       | /pets/:id     | Obtener mascota por ID 
-| POST      | /pets         | Crear nueva mascota 
-| PUT       | /pets/:id     | Actualizar mascota 
-| DELETE    | /pets/:id     | Eliminar mascota 
+| Método | Ruta      | Descripción               |
+| ------ | --------- | ------------------------- |
+| GET    | /health   | Estado del servidor       |
+| GET    | /pets     | Listar todas las mascotas |
+| GET    | /pets/:id | Obtener mascota por ID    |
+| POST   | /pets     | Crear nueva mascota       |
+| PUT    | /pets/:id | Actualizar mascota        |
+| DELETE | /pets/:id | Eliminar mascota          |
 
 #### Modelo de Datos (Pet)
 
@@ -46,7 +46,7 @@ backend/src/
   name: string,         // Encriptado
   species: string,      // Encriptado
   breed: string,        // Encriptado
-  age: number,          
+  age: number,
   owner: string,        // Encriptado
   createdAt: Date,
   updatedAt: Date
@@ -56,7 +56,7 @@ backend/src/
 #### Validaciones
 
 - **name:** Requerido, mínimo 2 caracteres
-- **species:** Requerido, mínimo 2 caracteres  
+- **species:** Requerido, mínimo 2 caracteres
 - **breed:** Requerido, mínimo 2 caracteres
 - **age:** Requerido, número positivo
 - **owner:** Requerido, mínimo 3 caracteres
@@ -77,8 +77,6 @@ Usa AES-256-CBC para proteger datos sensibles.
 - `encrypt(text)`: Genera IV aleatorio y encripta. Retorna `IV:datosEncriptados`
 - `decrypt(encryptedText)`: Extrae IV y desencripta. Retorna texto original o valor sin cambios si falla
 
-**Configuración:**  
-Variable de entorno `ENCRYPTION_KEY` o clave por defecto.
 
 #### Respuestas API
 
@@ -159,7 +157,7 @@ Incluye manejo de errores y transformación de respuestas.
 // environments/environment.ts
 export const environment = {
   production: false,
-  apiUrl: 'http://localhost:3000/api'
+  apiUrl: "http://localhost:3000/api",
 };
 ```
 
@@ -176,7 +174,6 @@ cd backend
 npm install
 npm run dev    # Desarrollo
 npm run build  # Compilar
-npm start      # Producción
 ```
 
 ### Frontend
@@ -185,7 +182,53 @@ npm start      # Producción
 cd frontend
 npm install
 npm start      # http://localhost:4200
-npm run build  # Compilar para producción
+```
+
+### Opción Alternativa: Docker 🐳
+
+**Requisitos previos:** Tener [Docker](https://www.docker.com/get-started) y Docker Compose instalados.
+
+#### Ejecutar todo el proyecto con un comando
+
+```bash
+# Desde la raíz del proyecto
+docker-compose up --build
+```
+
+Esto iniciará automáticamente:
+
+- **Backend** en `http://localhost:3000`
+- **Frontend** en `http://localhost:4200`
+
+#### Comandos útiles de Docker
+
+```bash
+# Ejecutar en segundo plano (detached mode)
+docker-compose up -d
+
+# Ver logs
+docker-compose logs -f
+
+# Detener servicios
+docker-compose down
+
+# Reconstruir imágenes
+docker-compose build
+
+# Limpiar todo (contenedores, imágenes, volúmenes)
+docker-compose down --rmi all --volumes
+```
+
+#### Ejecutar servicios individualmente
+
+```bash
+# Solo backend
+docker build -t pet-manager-backend ./backend
+docker run -p 3000:3000 pet-manager-backend
+
+# Solo frontend
+docker build -t pet-manager-frontend ./frontend
+docker run -p 4200:80 pet-manager-frontend
 ```
 
 ## Flujo de Trabajo
@@ -211,12 +254,14 @@ npm run build  # Compilar para producción
 ## Dependencias Principales
 
 **Backend:**
+
 - express: Framework web
 - joi: Validación de esquemas
 - uuid: Generación de IDs
 - cors: Configuración CORS
 
 **Frontend:**
+
 - @angular/core: Framework
 - @ng-bootstrap/ng-bootstrap: Componentes Bootstrap
 - bootstrap: Estilos

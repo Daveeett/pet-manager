@@ -1,10 +1,12 @@
 import express, { Application, Request, Response, NextFunction } from "express";
 import cors from "cors";
-import petRoutes from "./routes/pet.routes";
+import petRoutes from "./routes/pet/pet.routes";
 import { errorHandler, notFoundHandler } from "./middlewares/error.middleware";
+import { ENV } from "./config/environment";
 
 const app: Application = express();
-const PORT = process.env.PORT || 3000;
+const PORT = ENV.PORT;
+const HOST = ENV.HOST;
 app.use(
   cors({
     origin: ["http://localhost:4200", "http://127.0.0.1:4200"],
@@ -33,6 +35,7 @@ app.get("/api/health", (_req: Request, res: Response) => {
   });
 });
 
+//Rutas
 app.use("/api/pets", petRoutes);
 
 //middlewares de manejo de errores
@@ -40,7 +43,8 @@ app.use(notFoundHandler);
 app.use(errorHandler);
 
 app.listen(PORT, () => {
-  console.log(` Ejecutando en http://localhost:${PORT}`);
-  });
+  console.log(`Servidor ejecutando en http://${HOST}:${PORT}`);
+  console.log(`Entorno: ${ENV.NODE_ENV}`);
+});
 
 export default app;

@@ -5,12 +5,12 @@
       <div>
 
         <h5 class="card-title pet-name mb-1">
-          <i class="bi" [ngClass]="getSpeciesIcon(pet.species)"></i>
-          {{ pet.name }}
+          <i class="bi" [ngClass]="getSpeciesIcon(pet().species)"></i>
+          {{ pet().name }}
         </h5>
 
         <span class="badge bg-danger-subtle text-danger">
-          {{ pet.species }}
+          {{ pet().species }}
         </span>
       </div>
 
@@ -21,17 +21,17 @@
       
       <div class="info-row">
         <i class="bi bi-tag text-muted"></i>
-        <span><strong>Raza:</strong> {{ pet.breed }}</span>
+        <span><strong>Raza:</strong> {{ pet().breed }}</span>
       </div>
       
       <div class="info-row">
         <i class="bi bi-calendar3 text-muted"></i>
-        <span><strong>Edad:</strong> {{ pet.age }} {{ pet.age === 1 ? 'año' : 'años' }}</span>
+        <span><strong>Edad:</strong> {{ pet().age }} {{ pet().age === 1 ? 'año' : 'años' }}</span>
       </div>
       
       <div class="info-row">
         <i class="bi bi-person text-muted"></i>
-        <span><strong>Dueño:</strong> {{ pet.ownerName }}</span>
+        <span><strong>Dueño:</strong> {{ pet().ownerName }}</span>
       
       </div>
     </div>

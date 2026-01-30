@@ -1,0 +1,14 @@
+<div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1200;">
+  @for (toast of toastService.toasts; track toast) {
+    <ngb-toast
+      [class]="'bg-' + getBootstrapClass(toast.type) + ' text-white'"
+      [autohide]="true"
+      [delay]="toast.delay || 5000"
+      (hidden)="toastService.remove(toast)">
+      <div class="d-flex align-items-center">
+        <i class="bi me-2" [ngClass]="getIcon(toast.type)"></i>
+        <strong>{{ toast.message }}</strong>
+      </div>
+    </ngb-toast>
+  }
+</div>

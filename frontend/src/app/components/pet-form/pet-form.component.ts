@@ -1,6 +1,6 @@
-import {Component,Input,Output,EventEmitter,OnInit,OnChanges,SimpleChanges} from "@angular/core";
+import { Component, input, output, OnInit, effect } from "@angular/core";
 import { CommonModule } from "@angular/common";
-import { ReactiveFormsModule,FormBuilder,FormGroup,Validators } from "@angular/forms";
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from "@angular/forms";
 import { Pet } from "../../models/response/pet/pet.dto";
 import { CreatePetDTO } from "../../models/request/pet/create-pet.dto";
 import { UpdatePetDTO } from "../../models/request/pet/update-pet.dto";
@@ -12,28 +12,31 @@ import { UpdatePetDTO } from "../../models/request/pet/update-pet.dto";
   templateUrl: "./pet-form.component.html",
   styleUrl: "./pet-form.component.css",
 })
-export class PetFormComponent implements OnInit, OnChanges {
-  @Input() pet: Pet | null = null;
-  @Input() isEditing = false;
-  @Input() isLoading = false;
-  @Input() species: string[] = [];
+export class PetFormComponent implements OnInit {
+  pet = input<Pet | null>(null);
+  isEditing = input<boolean>(false);
+  isLoading = input<boolean>(false);
+  species = input<string[]>([]);
+  backendError = input<string>("");
 
-  @Output() save = new EventEmitter<CreatePetDTO | UpdatePetDTO>();
-  @Output() cancel = new EventEmitter<void>();
+  save = output<CreatePetDTO | UpdatePetDTO>();
+  cancel = output<void>();
 
   petForm!: FormGroup;
   private readonly TEXT_ONLY_PATTERN = /^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$/;
 
-  constructor(private fb: FormBuilder) {}
+  constructor(private fb: FormBuilder) {
+    // Effect para actualizar el formulario cuando cambia pet
+    effect(() => {
+      const petValue = this.pet();
+      if (this.petForm) {
+        this.updateFormValues(petValue);
+      }
+    });
+  }
 
   ngOnInit(): void {
     this.initForm();
-  }
-
-  ngOnChanges(changes: SimpleChanges): void {
-    if (changes["pet"] && this.petForm) {
-      this.updateFormValues();
-    }
   }
 
   private initForm(): void {
@@ -72,17 +75,18 @@ export class PetFormComponent implements OnInit, OnChanges {
       ],
     });
 
-    this.updateFormValues();
+    this.updateFormValues(this.pet());
   }
 
-  private updateFormValues(): void {
-    if (this.pet && this.petForm) {
+  private updateFormValues(petValue: Pet | null): void {
+    
+    if (petValue && this.petForm) {
       this.petForm.patchValue({
-        name: this.pet.name,
-        species: this.pet.species,
-        breed: this.pet.breed,
-        age: this.pet.age,
-        ownerName: this.pet.ownerName,
+        name: petValue.name,
+        species: petValue.species,
+        breed: petValue.breed,
+        age: petValue.age,
+        ownerName: petValue.ownerName,
       });
     } else if (this.petForm) {
       this.petForm.reset();
@@ -90,7 +94,7 @@ export class PetFormComponent implements OnInit, OnChanges {
   }
 
   isFieldInvalid(fieldName: string): boolean {
-    const field = this.petForm.get(fieldName);
+    const field = this.petForm.get(fieldName); 
     return field ? field.invalid && (field.dirty || field.touched) : false;
   }
 

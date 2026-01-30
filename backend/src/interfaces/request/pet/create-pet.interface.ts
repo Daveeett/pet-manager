@@ -1,5 +1,4 @@
-
-export interface CreatePetDTO {
+export interface CreatePetRequest {
   name: string;
   species: string;
   breed: string;

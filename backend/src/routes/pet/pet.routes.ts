@@ -1,14 +1,12 @@
 import { Router } from "express";
-import { validate } from "../middlewares/validate.middleware";
-import {createPetSchema, updatePetSchema, uuidSchema} from "../schemas/pet.schema";
-import {getAllPets, getPetById, createPet, updatePet, deletePet,getEncryptedData} from "../controllers/pet.controller";
+import { validate } from "../../middlewares/validate.middleware";
+import {createPetSchema, updatePetSchema, uuidSchema} from "../../schemas/pet.schema";
+import {getAllPets, getPetById, createPet, updatePet, deletePet} from "../../controllers/pet.controller";
 
 //Router para endpoints de mascotas
 const router = Router();
 
 router.get("/", getAllPets);
-
-router.get("/debug/encrypted", getEncryptedData);
 
 router.get("/:id", validate(uuidSchema, "params"), getPetById);
 

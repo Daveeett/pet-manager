@@ -1,12 +1,21 @@
-import { Component, OnInit, inject } from "@angular/core";
+import { Component, OnInit, inject, OnDestroy } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { FormsModule, ReactiveFormsModule } from "@angular/forms";
-import { NgbModal, NgbModalRef, NgbTooltipModule, NgbAlertModule } from "@ng-bootstrap/ng-bootstrap";
+import {
+  NgbModal,
+  NgbModalRef,
+  NgbTooltipModule,
+  NgbAlertModule,
+  NgbPaginationModule,
+} from "@ng-bootstrap/ng-bootstrap";
+import { Subject } from "rxjs";
+import { debounceTime, distinctUntilChanged } from "rxjs/operators";
 import { Pet } from "../../models/response/pet/pet.dto";
 import { CreatePetDTO } from "../../models/request/pet/create-pet.dto";
 import { UpdatePetDTO } from "../../models/request/pet/update-pet.dto";
 import { PET_SPECIES } from "../../models/constants/pet-species.constants";
 import { PetService } from "../../services/pet.service";
+import { ToastService } from "../../services/toast.service";
 import { PetFormComponent } from "../pet-form/pet-form.component";
 import { PetCardComponent } from "../pet-card/pet-card.component";
 import { ConfirmModalComponent } from "../confirm-modal/confirm-modal.component";
@@ -14,89 +23,107 @@ import { ConfirmModalComponent } from "../confirm-modal/confirm-modal.component"
 @Component({
   selector: "app-pet-list",
   standalone: true,
-  imports: [CommonModule,FormsModule,ReactiveFormsModule,NgbTooltipModule,NgbAlertModule,
+  imports: [CommonModule,FormsModule,ReactiveFormsModule,NgbTooltipModule,NgbAlertModule,NgbPaginationModule,
     PetFormComponent,PetCardComponent,ConfirmModalComponent,
   ],
   templateUrl: "./pet-list.component.html",
   styleUrl: "./pet-list.component.scss",
 })
-
-export class PetListComponent implements OnInit {
+export class PetListComponent implements OnInit, OnDestroy {
   private petService = inject(PetService);
   private modalService = inject(NgbModal);
+  private toastService = inject(ToastService);
 
   pets: Pet[] = [];
   filteredPets: Pet[] = [];
   searchTerm = "";
   isLoading = false;
-  errorMessage = "";
-  successMessage = "";
+
+  // Paginación
+  currentPage = 1;
+  pageSize = 6;
+  totalItems = 0;
+  totalPages = 0;
 
   showForm = false;
   isEditing = false;
   selectedPet: Pet | null = null;
+  formError = "";
   readonly species = PET_SPECIES;
+
+  private searchSubject = new Subject<string>();
 
   ngOnInit(): void {
     this.loadPets();
+
+    
+    this.searchSubject
+      .pipe(
+        debounceTime(1000), // Espera 1000ms
+        distinctUntilChanged(), 
+      )
+      .subscribe(() => {
+        this.currentPage = 1;
+        this.loadPets();
+      });
+  }
+
+  ngOnDestroy(): void {
+    this.searchSubject.complete();
   }
 
   loadPets(): void {
     this.isLoading = true;
-    this.errorMessage = "";
 
-    this.petService.getAllPets().subscribe({
-      next: (pets) => {
-        this.pets = pets;
-        this.filteredPets = pets;
-        this.isLoading = false;
-      },
-      error: (error) => {
-        this.errorMessage = error.message || "Error al cargar las mascotas";
-        this.isLoading = false;
-      },
-    });
+    this.petService
+      .getAllPets(this.currentPage, this.pageSize, this.searchTerm)
+      .subscribe({
+        next: (response) => {
+          this.pets = response.data;
+          this.filteredPets = response.data;
+          this.totalItems = response.pagination.total;
+          this.totalPages = response.pagination.totalPages;
+          this.isLoading = false;
+        },
+        error: (error) => {
+          this.toastService.error(error.message);
+          this.isLoading = false;
+        },
+      });
   }
 
   //Busca mascotas por nombre
   onSearch(): void {
-    const term = this.searchTerm.trim().toLowerCase();
-
-    if (!term) {
-      this.filteredPets = this.pets;
-      return;
-    }
-
-    // Búsqueda local para mejor UX
-    this.filteredPets = this.pets.filter(
-      (pet) =>
-        pet.name.toLowerCase().includes(term) ||
-        pet.species.toLowerCase().includes(term) ||
-        pet.breed.toLowerCase().includes(term) ||
-        pet.ownerName.toLowerCase().includes(term),
-    );
+    this.searchSubject.next(this.searchTerm);
   }
 
   //Limpia la búsqueda
   clearSearch(): void {
     this.searchTerm = "";
-    this.filteredPets = this.pets;
+    this.currentPage = 1;
+    this.loadPets();
+  }
+
+  // Cambiar de página
+  onPageChange(page: number): void {
+    this.currentPage = page;
+    this.loadPets();
   }
 
   //Abre el formulario para agregar una nueva mascota
   openAddForm(): void {
     this.isEditing = false;
     this.selectedPet = null;
+    this.formError = "";
     this.showForm = true;
-    this.clearMessages();
   }
 
   //Abre el formulario para editar una mascota existente
   openEditForm(pet: Pet): void {
     this.isEditing = true;
     this.selectedPet = { ...pet };
+    this.formError = "";
     this.showForm = true;
-    this.clearMessages();
   }
 
   //Cierra el formulario
@@ -104,12 +131,13 @@ export class PetListComponent implements OnInit {
     this.showForm = false;
     this.selectedPet = null;
     this.isEditing = false;
+    this.formError = "";
   }
 
   //Guarda una mascota (crear o actualizar)
   onSavePet(petData: CreatePetDTO | UpdatePetDTO): void {
     this.isLoading = true;
-    this.clearMessages();
+    this.formError = "";
 
     if (this.isEditing && this.selectedPet) {
       // Actualizar mascota existente
@@ -117,18 +145,17 @@ export class PetListComponent implements OnInit {
         .updatePet(this.selectedPet.id, petData as UpdatePetDTO)
         .subscribe({
           next: (updatedPet) => {
-            const index = this.pets.findIndex((p) => p.id === updatedPet.id);
-            if (index !== -1) {
-              this.pets[index] = updatedPet;
-              this.onSearch(); // Actualizar lista filtrada
-            }
-            this.successMessage = `¡${updatedPet.name} ha sido actualizado exitosamente!`;
+            this.toastService.success(
+              `¡${updatedPet.name} ha sido actualizado exitosamente!`,
+            );
             this.closeForm();
             this.isLoading = false;
+            // Recarga lista
+            this.loadPets();
           },
           error: (error) => {
-            this.errorMessage =
-              error.message || "Error al actualizar la mascota";
+            this.formError = error.message;
+            this.toastService.error(error.message);
             this.isLoading = false;
           },
         });
@@ -136,14 +163,17 @@ export class PetListComponent implements OnInit {
       // Crear nueva mascota
       this.petService.createPet(petData as CreatePetDTO).subscribe({
         next: (newPet) => {
-          this.pets.unshift(newPet);
-          this.onSearch(); // Actualizar lista filtrada
-          this.successMessage = `¡${newPet.name} ha sido agregado exitosamente!`;
+          this.toastService.success(
+            `¡${newPet.name} ha sido agregado exitosamente!`,
+          );
           this.closeForm();
           this.isLoading = false;
+          // Recarga lista
+          this.loadPets();
         },
         error: (error) => {
-          this.errorMessage = error.message || "Error al crear la mascota";
+          this.formError = error.message;
+          this.toastService.error(error.message);
           this.isLoading = false;
         },
       });
@@ -177,33 +207,19 @@ export class PetListComponent implements OnInit {
 
   private deletePet(pet: Pet): void {
     this.isLoading = true;
-    this.clearMessages();
 
     this.petService.deletePet(pet.id).subscribe({
       next: () => {
-        this.pets = this.pets.filter((p) => p.id !== pet.id);
-        this.onSearch(); 
-        this.successMessage = `${pet.name} ha sido eliminado exitosamente`;
+        this.toastService.success(`${pet.name} ha sido eliminado exitosamente`);
         this.isLoading = false;
+        // Recarga lista
+        this.loadPets();
       },
       error: (error) => {
-        this.errorMessage = error.message || "Error al eliminar la mascota";
+        this.toastService.error(error.message);
         this.isLoading = false;
       },
     });
-  }
-
-  clearMessages(): void {
-    this.errorMessage = "";
-    this.successMessage = "";
-  }
-
-  closeAlert(type: "success" | "error"): void {
-    if (type === "success") {
-      this.successMessage = "";
-    } else {
-      this.errorMessage = "";
-    }
   }
 
   getSpeciesIcon(species: string): string {

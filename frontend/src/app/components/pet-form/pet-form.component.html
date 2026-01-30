@@ -39,7 +39,7 @@
         [class.is-invalid]="isFieldInvalid('species')" [class.is-valid]="isFieldValid('species')">
         <option value="">Selecciona una especie</option>
         
-        @for (sp of species; track sp) {
+        @for (sp of species(); track sp) {
           <option [value]="sp">{{ sp }}</option>
         }
       </select>
@@ -141,20 +141,20 @@
 
   <div class="d-flex justify-content-end gap-2 mt-3">
     
-    <button type="button" class="btn btn-outline-secondary" (click)="onCancel()" [disabled]="isLoading">
+    <button type="button" class="btn btn-outline-secondary" (click)="onCancel()" [disabled]="isLoading()">
       <i class="bi bi-x-lg me-1"></i>
       Cancelar
     </button>
     
-    <button type="submit" class="btn btn-danger" [disabled]="petForm.invalid || isLoading">
+    <button type="submit" class="btn btn-danger" [disabled]="petForm.invalid || isLoading()">
     
-      @if (isLoading) {
+      @if (isLoading()) {
         <span class="spinner-border spinner-border-sm me-1" role="status"></span>
         Guardando...
       } 
       @else {
-        <i class="bi" [ngClass]="isEditing ? 'bi-check-lg' : 'bi-plus-lg'"></i>
-        {{ isEditing ? 'Actualizar' : 'Agregar' }}
+        <i class="bi" [ngClass]="isEditing() ? 'bi-check-lg' : 'bi-plus-lg'"></i>
+        {{ isEditing() ? 'Actualizar' : 'Agregar' }}
       }
     </button>
   

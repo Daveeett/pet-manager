@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter } from "@angular/core";
+import { Component, input, output } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { NgbTooltipModule } from "@ng-bootstrap/ng-bootstrap";
 import { Pet } from "../../models/response/pet/pet.dto";
@@ -11,16 +11,17 @@ import { Pet } from "../../models/response/pet/pet.dto";
   styleUrl: "./pet-card.component.scss",
 })
 export class PetCardComponent {
-  @Input({ required: true }) pet!: Pet;
-  @Output() edit = new EventEmitter<Pet>();
-  @Output() delete = new EventEmitter<Pet>();
+  
+  pet = input.required<Pet>();
+  edit = output<Pet>();
+  delete = output<Pet>();
 
   onEdit(): void {
-    this.edit.emit(this.pet);
+    this.edit.emit(this.pet());
   }
 
   onDelete(): void {
-    this.delete.emit(this.pet);
+    this.delete.emit(this.pet());
   }
 
   getSpeciesIcon(species: string): string {

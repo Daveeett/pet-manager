@@ -6,6 +6,7 @@ import { Pet } from "../models/response/pet/pet.dto";
 import { CreatePetDTO } from "../models/request/pet/create-pet.dto";
 import { UpdatePetDTO } from "../models/request/pet/update-pet.dto";
 import { ApiResponse } from "../models/response/ibase-response/api-response.dto";
+import { PaginatedResponse } from "../models/response/paginated-response.dto";
 import { environment } from "../../environments/environment";
 
 @Injectable({
@@ -16,31 +17,36 @@ export class PetService {
 
   constructor(private http: HttpClient) {}
 
-  getAllPets(): Observable<Pet[]> {
-    return this.http.get<ApiResponse<Pet[]>>(this.apiUrl).pipe(
+  getAllPets(
+    page: number = 1,
+    limit: number = 6,
+    search?: string,
+  ): Observable<PaginatedResponse<Pet>> {
+    let params = new HttpParams()
+      .set("page", page.toString())
+      .set("limit", limit.toString());
+
+    if (search && search.trim()) {
+      params = params.set("search", search.trim());
+    }
+
+    return this.http.get<PaginatedResponse<Pet>>(this.apiUrl, { params }).pipe(
       map((response) => {
         if (response.success && response.data) {
-          //se extrae solo response.data
-          return response.data;
+          return response; // Devuelve la respuesta completa
         }
-        throw new Error(response.error || "Error al obtener las mascotas");
+        throw new Error("Error al obtener mascotas");
       }),
       catchError(this.handleError),
     );
   }
 
-  searchPets(searchTerm: string): Observable<Pet[]> {
-    const params = new HttpParams().set("search", searchTerm.trim());
-
-    return this.http.get<ApiResponse<Pet[]>>(this.apiUrl, { params }).pipe(
-      map((response) => {
-        if (response.success && response.data) {
-          return response.data;
-        }
-        throw new Error(response.error || "Error en la búsqueda");
-      }),
-      catchError(this.handleError),
-    );
+  searchPets(
+    searchTerm: string,
+    page: number = 1,
+    limit: number = 6,
+  ): Observable<PaginatedResponse<Pet>> {
+    return this.getAllPets(page, limit, searchTerm);
   }
 
   getPetById(id: string): Observable<Pet> {
@@ -49,7 +55,7 @@ export class PetService {
         if (response.success && response.data) {
           return response.data;
         }
-        throw new Error(response.error || "Mascota no encontrada");
+        throw new Error(response.error);
       }),
       catchError(this.handleError),
     );
@@ -61,7 +67,7 @@ export class PetService {
         if (response.success && response.data) {
           return response.data;
         }
-        throw new Error(response.error || "Error al crear la mascota");
+        throw new Error(response.error);
       }),
       catchError(this.handleError),
     );
@@ -73,7 +79,8 @@ export class PetService {
         if (response.success && response.data) {
           return response.data;
         }
-        throw new Error(response.error || "Error al actualizar la mascota");
+
+        throw new Error(response.error);
       }),
       catchError(this.handleError),
     );
@@ -83,7 +90,7 @@ export class PetService {
     return this.http.delete<ApiResponse<null>>(`${this.apiUrl}/${id}`).pipe(
       map((response) => {
         if (!response.success) {
-          throw new Error(response.error || "Error al eliminar la mascota");
+          throw new Error(response.error);
         }
       }),
       catchError(this.handleError),
@@ -94,24 +101,27 @@ export class PetService {
     let errorMessage = "Ha ocurrido un error inesperado";
     let validationDetails: { field: string; message: string }[] | undefined;
 
+      // Error del navegador
     if (error.error instanceof ErrorEvent) {
-      // Error del cliente
       errorMessage = `Error: ${error.error.message}`;
-    } else if (error.error?.error) {
-      // Error del servidor con mensaje
+
+    } 
+    else if (error.error?.error) {
+      // Error del servidor 
       errorMessage = error.error.error;
 
-      // Capturar detalles de validación si existen
+      // Capturar errores del backend con detalles de validación
       if (error.error.details && Array.isArray(error.error.details)) {
         validationDetails = error.error.details;
-        // Construir mensaje con los detalles
+        //Construye el mensaje concatenado con los detalles
         const detailMessages = error.error.details
           .map((d: { field: string; message: string }) => `${d.message}`)
+          //Se extrae únicamente el mensaje de error
           .join("; ");
         errorMessage = detailMessages || errorMessage;
       }
     } else if (error.status) {
-      // Error HTTP sin mensaje personalizado
+      // Errores HTTP sin mensaje personalizado
       switch (error.status) {
         case 400:
           errorMessage = "Datos inválidos";

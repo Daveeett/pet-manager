@@ -1,37 +1,47 @@
 import { Request, Response, NextFunction, response } from "express";
 import { petService } from "../services/pet.service";
-import { CreatePetDTO } from "../dtos/request/pet/create-pet.dto";
-import { UpdatePetDTO } from "../dtos/request/pet/update-pet.dto";
-import { ApiResponse } from "../dtos/response/ibase-response/api-response.dto";
+import { PaginatedResult } from "../interfaces/response/paginated-result.interface";
+import { CreatePetRequest } from "../interfaces/request/pet/create-pet.interface";
+import { UpdatePetRequest } from "../interfaces/request/pet/update-pet.interface";
+import { ApiResponse } from "../interfaces/response/api-response.interface";
+import { PaginatedResponse } from "../interfaces/response/paginated-response.interface";
 import { Pet } from "../entities/pet/pet.entity";
 
-// Obtiene todas las mascotas o busca por criterio
-export const getAllPets = async (req: Request,res: Response,next: NextFunction,): Promise<void> => {
+// Obtiene todas las mascotas o busca por criterio con paginación
+export const getAllPets = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const { search } = req.query //forma de recibir datos por query(despues del ? en la url)
-    let pets: Pet[];
+    const { search, page = "1", limit = "6" } = req.query;
+    const pageNum = Math.max(1, parseInt(page as string, 6) || 1);
+    const limitNum = Math.min(100, Math.max(1, parseInt(limit as string, 6) || 6));
+
+    let result: PaginatedResult<Pet>;
+
     if (search && typeof search === "string" && search.trim().length > 0) {
-      pets = petService.findBySearch(search.trim());
+      result = petService.findBySearch(search.trim(), pageNum, limitNum);
     } else {
-      pets = petService.findAll();
+      result = petService.findAll(pageNum, limitNum);
     }
 
-    const response: ApiResponse<Pet[]> = {
+    const response: PaginatedResponse<Pet> = {
       success: true,
-      data: pets,
-      message: `Se encontraron ${pets.length} mascota(s)`,
+      data: result.data,
+      pagination: result.pagination,
+      message: `Se encontraron ${result.pagination.total} mascota(s)`,
     };
 
-    res.json(response)//metodo para enviar respuesta en formato json;200 ok por defecto
+    //se envia la respuesta al frontend
+    res.json(response);
+
   } catch (error) {
     next(error);
   }
 };
 
 // Obtiene una mascota específica por su ID (UUID)
-export const getPetById = async (req: Request,res: Response,next: NextFunction,): Promise<void> => {
+export const getPetById = async (req: Request,res: Response,next: NextFunction): Promise<void> => {
+  
   try {
-    const { id } = req.params; //forma de recibir datos por params(despues de los dos puntos en la url)
+    const id = req.params.id as string; //forma de recibir datos por params
     const pet = petService.findById(id);
 
     if (!pet) {
@@ -39,21 +49,34 @@ export const getPetById = async (req: Request,res: Response,next: NextFunction,)
         success: false,
         error: "Mascota no encontrada",
       };
-      res.status(404).json(response);//404 not found
+      res.status(404).json(response); //404 not found
       return;
     }
 
     const response: ApiResponse<Pet> = { success: true, data: pet };
     res.json(response);
+
   } catch (error) {
     next(error);
   }
 };
 
 // Crea una nueva mascota con los datos proporcionados
-export const createPet = async (req: Request,res: Response,next: NextFunction,): Promise<void> => {
+export const createPet = async (req: Request,res: Response,next: NextFunction): Promise<void> => {
   try {
-    const data: CreatePetDTO = req.body; //forma de recibir datos por body(en el cuerpo de la peticion)
+    const data: CreatePetRequest = req.body; //forma de recibir datos por body(en el cuerpo de la peticion)
+
+    // Validar si ya existe una mascota con los mismos datos
+    if (petService.existsDuplicate(data)) {
+      const response: ApiResponse<null> = {
+        success: false,
+        error:
+          "Ya existe una mascota con los mismos datos (nombre, especie, raza y dueño)",
+      };
+      res.status(409).json(response); // 409 Conflict
+      return;
+    }
+
     const newPet = petService.create(data);
 
     const response: ApiResponse<Pet> = {
@@ -62,17 +85,42 @@ export const createPet = async (req: Request,res: Response,next: NextFunction,):
       message: "Mascota creada exitosamente",
     };
 
-    res.status(201).json(response);//201 created
+    res.status(201).json(response); //201 created
+  
   } catch (error) {
     next(error);
   }
 };
 
 // Actualiza una mascota existente con los datos proporcionados
-export const updatePet = async (req: Request,res: Response,next: NextFunction,): Promise<void> => {
+export const updatePet = async (req: Request,res: Response,next: NextFunction): Promise<void> => {
   try {
-    const { id } = req.params;
-    const data: UpdatePetDTO = req.body;
+    const id = req.params.id as string;
+    const data: UpdatePetRequest = req.body;
+
+    // Validar si ya existe otra mascota con los mismos datos
+    const existingPet = petService.findById(id);
+    if (existingPet) {
+      const checkData: CreatePetRequest = {
+        name: data.name || existingPet.name,
+        species: data.species || existingPet.species,
+        breed: data.breed || existingPet.breed,
+        age: data.age !== undefined ? data.age : existingPet.age,
+        ownerName: data.ownerName || existingPet.ownerName,
+      };
+
+      if (petService.existsDuplicate(checkData, id)) {
+        const response: ApiResponse<null> = {
+          success: false,
+          error:
+            "Ya existe otra mascota con los mismos datos (nombre, especie, raza y dueño)",
+        };
+
+        res.status(409).json(response); // 409 Conflict
+        return;
+
+      }
+    }
 
     const updatedPet = petService.update(id, data);
 
@@ -81,6 +129,7 @@ export const updatePet = async (req: Request,res: Response,next: NextFunction,):
         success: false,
         error: "Mascota no encontrada",
       };
+
       res.status(404).json(response);
       return;
     }
@@ -89,18 +138,20 @@ export const updatePet = async (req: Request,res: Response,next: NextFunction,):
       success: true,
       data: updatedPet,
       message: "Mascota actualizada exitosamente",
+    
     };
 
-    res.json(response);//200 ok por defecto
+    res.json(response);
+  
   } catch (error) {
     next(error);
   }
 };
 
 // Elimina una mascota por su ID (UUID)
-export const deletePet = async (req: Request,res: Response,next: NextFunction,): Promise<void> => {
+export const deletePet = async (req: Request,res: Response,next: NextFunction): Promise<void> => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const deleted = petService.delete(id);
 
     if (!deleted) {
@@ -118,16 +169,7 @@ export const deletePet = async (req: Request,res: Response,next: NextFunction,):
     };
 
     res.json(response);
-  } catch (error) {
-    next(error);
-  }
-};
-
-export const getEncryptedData = async (req: Request, res: Response, next: NextFunction,): Promise<void> => {
-  try {
-    const rawData = petService.getRawData();
-    const response = {success: true, data: rawData, message: "Datos en memoria (ownerName encriptado)",};
-    res.json(response);
+  
   } catch (error) {
     next(error);
   }

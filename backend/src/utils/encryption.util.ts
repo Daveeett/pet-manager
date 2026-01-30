@@ -1,8 +1,8 @@
 import * as crypto from "crypto";
+import { ENV } from "../config/environment";
 
 // Utilidad para encriptar y desencriptar datos sensibles 
-const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || "mi-clave-secreta";
-const KEY = crypto.scryptSync(ENCRYPTION_KEY, "salt", 32);
+const KEY = crypto.scryptSync(ENV.ENCRYPTION_KEY, "salt", 32);
 const ALGORITHM = "aes-256-cbc";
 
 export function encrypt(text: string): string {
@@ -12,7 +12,6 @@ export function encrypt(text: string): string {
   // Crea una maquina de cifrado con mi clave
   const cipher = crypto.createCipheriv(ALGORITHM, KEY, iv);
 
-  // Encripta el texto
   // "utf8" es el formato de codificación del texto(caracteres normales)
   // "hex" es el formato de codificación del texto encriptado
   let encrypted = cipher.update(text, "utf8", "hex");
@@ -21,6 +20,7 @@ export function encrypt(text: string): string {
 
   // Retorna datos en formato hexadecimal
   return `${iv.toString("hex")}:${encrypted}`;
+
 }
 
 // Desencripta un texto previamente encriptado

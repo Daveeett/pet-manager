@@ -1,20 +1,11 @@
-import { Agent } from "http";
-import Joi, { string } from "joi";
+import Joi from "joi";
 
-//Schemas de validación usando Joi para operaciones de Pet
 //Regex para validar que un texto solo contiene letras y espacios
 const TEXT_ONLY_REGEX = /^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$/;
 
-
 //Schema para validar creación de Pet
 export const createPetSchema = Joi.object({
-  name: Joi.string()
-    .min(2)
-    .max(50)
-    .pattern(TEXT_ONLY_REGEX)
-    .trim()
-    .required()
-    .messages({
+  name: Joi.string().min(2).max(50).pattern(TEXT_ONLY_REGEX).trim().required().messages({
       "string.empty": "El nombre es requerido",
       "string.min": "El nombre debe tener al menos 2 caracteres",
       "string.max": "El nombre no puede exceder 50 caracteres",
@@ -22,24 +13,14 @@ export const createPetSchema = Joi.object({
       "any.required": "El nombre es requerido",
     }),
 
-  species: Joi.string()
-    .min(2)
-    .pattern(TEXT_ONLY_REGEX)
-    .trim()
-    .required()
-    .messages({
+  species: Joi.string().min(2).pattern(TEXT_ONLY_REGEX).trim().required().messages({
       "string.empty": "La especie es requerida",
       "string.min": "La especie debe tener al menos 2 caracteres",
       "string.pattern.base": "La especie solo puede contener letras y espacios",
       "any.required": "La especie es requerida",
     }),
 
-  breed: Joi.string()
-    .min(2)
-    .pattern(TEXT_ONLY_REGEX)
-    .trim()
-    .required()
-    .messages({
+  breed: Joi.string().min(2).pattern(TEXT_ONLY_REGEX).trim().required().messages({
       "string.empty": "La raza es requerida",
       "string.min": "La raza debe tener al menos 2 caracteres",
       "string.pattern.base": "La raza solo puede contener letras y espacios",
@@ -54,12 +35,7 @@ export const createPetSchema = Joi.object({
     "any.required": "La edad es requerida",
   }),
 
-  ownerName: Joi.string()
-    .min(2)
-    .pattern(TEXT_ONLY_REGEX)
-    .trim()
-    .required()
-    .messages({
+  ownerName: Joi.string().min(2).pattern(TEXT_ONLY_REGEX).trim().required().messages({
       "string.empty": "El nombre del dueño es requerido",
       "string.min": "El nombre del dueño debe tener al menos 2 caracteres",
       "string.pattern.base":"El nombre del dueño solo puede contener letras y espacios",
@@ -111,3 +87,4 @@ export const uuidSchema = Joi.object({
     "any.required": "El ID es requerido",
   }),
 });
+
