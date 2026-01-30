@@ -23,7 +23,6 @@ export const config: EnvConfig = {
   isDevelopment: env.get("NODE_ENV").asString() === "development"
 };
 
-// Mantener compatibilidad con código existente 
 export const ENV = {
   HOST: config.server.host,
   PORT: config.server.port,
