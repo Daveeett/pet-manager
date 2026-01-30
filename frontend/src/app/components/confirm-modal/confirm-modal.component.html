@@ -1,0 +1,25 @@
+<!-- Modal generico para confirmaciones -->
+<div class="modal-header">
+  <h5 class="modal-title">
+    <!--Icono -->
+    <i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>
+    {{ title }}
+  </h5>
+  <button type="button" class="btn-close" aria-label="Cerrar"(click)="activeModal.dismiss()"></button>
+</div>
+
+<div class="modal-body">
+  <p class="mb-0">{{ message }}</p>
+</div>
+
+<div class="modal-footer">
+  <button type="button" class="btn btn-outline-secondary" (click)="activeModal.close(false)">
+    <i class="bi bi-x-lg me-1"></i>
+    {{ cancelText }}
+  </button>
+  
+  <button type="button" class="btn" [ngClass]="confirmClass" (click)="activeModal.close(true)">
+    <i class="bi bi-check-lg me-1"></i>
+    {{ confirmText }}
+  </button>
+</div>

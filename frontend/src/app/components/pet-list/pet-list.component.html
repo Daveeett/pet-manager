@@ -1,0 +1,158 @@
+<div class="container py-4">
+  
+  @if (successMessage) {
+    <ngb-alert type="success" [dismissible]="true" (closed)="closeAlert('success')" class="fade-in">
+      <i class="bi bi-check-circle-fill me-2"></i>
+      {{ successMessage }}
+    </ngb-alert>
+  }
+  
+  @if (errorMessage) {<ngb-alert type="danger" [dismissible]="true" (closed)="closeAlert('error')" class="fade-in">
+      <i class="bi bi-exclamation-triangle-fill me-2"></i>
+      {{ errorMessage }}
+    </ngb-alert>
+  }
+
+  
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      
+      <h1 class="h2 mb-1">
+        <i class="bi bi-heart-pulse-fill me-2"></i>
+          Mis Mascotas
+      </h1>
+
+      <p class="text-muted mb-0">Gestiona la información de tus mascotas</p>
+    </div>
+    
+    <button class="btn btn-danger btn-lg"(click)="openAddForm()"[disabled]="isLoading" ngbTooltip="Agregar nueva mascota">
+      <i class="bi bi-plus-lg me-2"></i>
+        Nueva Mascota
+    </button>
+
+  </div>
+
+  <!-- Barra de búsqueda -->
+  <div class="card mb-4">
+    <div class="card-body">
+      <div class="row align-items-center">
+        <div class="col-md-8">
+    
+          <div class="search-box">
+            <i class="bi bi-search"></i>
+            <input type="text" class="form-control" placeholder="Buscar por nombre, especie, raza o dueño"
+            [(ngModel)]="searchTerm"(input)="onSearch()"[disabled]="isLoading">
+          </div>
+        </div>
+
+        <div class="col-md-4 mt-3 mt-md-0 text-md-end">
+    
+          @if (searchTerm) {
+            <button class="btn btn-outline-secondary me-2" (click)="clearSearch()" ngbTooltip="Limpiar búsqueda">
+              <i class="bi bi-x-lg"></i>
+              Limpiar
+            </button>
+          }
+    
+          <button class="btn btn-danger"(click)="loadPets()" [disabled]="isLoading" ngbTooltip="Recargar lista">
+            <i class="bi bi-arrow-clockwise" [class.spin]="isLoading"></i>
+            Actualizar
+          </button>
+    
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Formulario de mascota (modal inline) -->
+  @if (showForm) {
+    <div class="card mb-4 fade-in border-primary">
+      <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+        
+        <h5 class="mb-0">
+          <i class="bi" [ngClass]="isEditing ? 'bi-pencil-square' : 'bi-plus-circle'"></i>
+          {{ isEditing ? 'Editar Mascota' : 'Nueva Mascota' }}
+        </h5>
+      
+        <button type="button" class="btn-close btn-close-white" (click)="closeForm()" aria-label="Cerrar"></button>
+      
+      </div>
+      <div class="card-body">
+      
+        <app-pet-form [pet]="selectedPet" [isEditing]="isEditing" [isLoading]="isLoading" [species]="species"
+          (save)="onSavePet($event)" (cancel)="closeForm()">
+        </app-pet-form>
+      
+      </div>
+    </div>
+  }
+
+  <!-- Estado de carga -->
+  @if (isLoading && !showForm) {
+    <div class="text-center py-5">
+      
+      <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+        <span class="visually-hidden">Cargando...</span>
+      </div>
+      
+      <p class="text-muted mt-3">Cargando mascotas...</p>
+    </div>
+  }
+
+  <!-- Lista de mascotas -->
+  @if (!isLoading || showForm) {
+    @if (filteredPets.length === 0) {
+      <!-- Estado vacío -->
+      <div class="empty-state fade-in">
+        <i class="bi bi-emoji-frown"></i>
+    
+        @if (searchTerm) {
+          <h4>No se encontraron resultados</h4>
+          <p class="text-muted">No hay mascotas que coincidan con "{{ searchTerm }}"</p>
+          <button class="btn btn-outline-primary" (click)="clearSearch()">
+            <i class="bi bi-x-lg me-2"></i>
+            Limpiar búsqueda
+          </button>
+    
+        } @else {
+          <h4>No hay mascotas registradas</h4>
+          <p class="text-muted">¡Agrega tu primera mascota para comenzar!</p>
+          <button class="btn btn-danger" (click)="openAddForm()">
+            <i class="bi bi-plus-lg me-2"></i>
+            Agregar Mascota
+          </button>
+     
+        }
+      </div>
+    } @else {
+      <!-- Contador de resultados -->
+      <div class="d-flex justify-content-between align-items-center mb-3">
+     
+        <small class="text-muted">
+          <i class="bi bi-list-ul me-1"></i>
+          Mostrando {{ filteredPets.length }} de {{ pets.length }} mascota(s)
+        </small>
+        
+        @if (searchTerm) {
+          <span class="badge bg-danger">
+           <i class="bi bi-search me-1"></i>
+            Búsqueda: "{{ searchTerm }}"
+          </span>
+        }
+    
+      </div>
+
+      <!-- Grid de tarjetas de mascotas -->
+      <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+    
+        @for (pet of filteredPets; track pet.id) {
+          <div class="col fade-in">
+            <app-pet-card [pet]="pet" (edit)="openEditForm($event)" (delete)="confirmDelete($event)">
+            </app-pet-card>
+          </div>
+    
+        }
+      </div>
+    }
+  }
+</div>

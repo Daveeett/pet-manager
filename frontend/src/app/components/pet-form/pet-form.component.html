@@ -1,0 +1,162 @@
+<form [formGroup]="petForm" (ngSubmit)="onSubmit()">
+  <div class="row">
+    <div class="col-md-6 mb-3">
+
+      <label for="name" class="form-label">
+        Nombre <span class="text-primray">*</span>
+      </label>
+      
+      <input type="text" id="name" class="form-control" formControlName="name"
+        [class.is-invalid]="isFieldInvalid('name')" [class.is-valid]="isFieldValid('name')"
+        placeholder="Ej: Max, Luna, Rocky...">
+      
+      @if (isFieldInvalid('name')) {
+        <div class="invalid-feedback">
+      
+          @if (petForm.get('name')?.errors?.['required']) {
+            El nombre es requerido
+          } 
+          @else if (petForm.get('name')?.errors?.['minlength']) {
+            El nombre debe tener al menos 2 caracteres
+          } 
+          @else if (petForm.get('name')?.errors?.['maxlength']) {
+            El nombre no puede exceder 50 caracteres
+          }
+          @else if (petForm.get('name')?.errors?.['pattern']) {
+            El nombre solo puede contener letras y espacios
+          }
+        </div>
+      }
+    </div>
+
+    <div class="col-md-6 mb-3">
+      
+      <label for="species" class="form-label">
+        Especie <span class="text-danger">*</span>
+      </label>
+      
+      <select id="species" class="form-select" formControlName="species"
+        [class.is-invalid]="isFieldInvalid('species')" [class.is-valid]="isFieldValid('species')">
+        <option value="">Selecciona una especie</option>
+        
+        @for (sp of species; track sp) {
+          <option [value]="sp">{{ sp }}</option>
+        }
+      </select>
+
+      @if (isFieldInvalid('species')) {
+        <div class="invalid-feedback">
+          @if (petForm.get('species')?.errors?.['required']) {
+            La especie es requerida
+          }
+
+        </div>
+      }
+    </div>
+
+    <div class="col-md-6 mb-3">
+      
+      <label for="breed" class="form-label">
+        Raza <span class="text-danger">*</span>
+      </label>
+      
+      <input type="text" id="breed" class="form-control" formControlName="breed"
+        [class.is-invalid]="isFieldInvalid('breed')" [class.is-valid]="isFieldValid('breed')"
+        placeholder="Ej: Golden Retriever, Siamés...">
+      
+      @if (isFieldInvalid('breed')) {
+        <div class="invalid-feedback">
+
+          @if (petForm.get('breed')?.errors?.['required']) {
+            La raza es requerida
+          } 
+          @else if (petForm.get('breed')?.errors?.['minlength']) {
+            La raza debe tener al menos 2 caracteres
+          }
+          @else if (petForm.get('breed')?.errors?.['maxlength']) {
+            La raza no puede exceder 50 caracteres
+          }
+          @else if (petForm.get('breed')?.errors?.['pattern']) {
+            La raza solo puede contener letras y espacios
+          }
+        </div>
+      }
+    </div>
+
+    <div class="col-md-6 mb-3">
+      
+      <label for="age" class="form-label">
+        Edad (años) <span class="text-danger">*</span>
+      </label>
+      
+      <input type="number" id="age" class="form-control" formControlName="age"
+        [class.is-invalid]="isFieldInvalid('age')" [class.is-valid]="isFieldValid('age')" min="0" max="100"
+        placeholder="Ej: 3">
+      
+      @if (isFieldInvalid('age')) {
+        <div class="invalid-feedback">
+          @if (petForm.get('age')?.errors?.['required']) {
+            La edad es requerida
+          } 
+          @else if (petForm.get('age')?.errors?.['min']) {
+            La edad no puede ser negativa
+          } 
+          @else if (petForm.get('age')?.errors?.['max']) {
+            La edad no puede ser mayor a 100 años
+          }
+        </div>
+      }
+    </div>
+
+    <div class="col-12 mb-3">
+      
+      <label for="ownerName" class="form-label">
+        Nombre del Dueño <span class="text-danger">*</span>
+      </label>
+      
+      <input type="text" id="ownerName" class="form-control" formControlName="ownerName"
+        [class.is-invalid]="isFieldInvalid('ownerName')" [class.is-valid]="isFieldValid('ownerName')"
+        placeholder="Ej: Juan García">
+      
+      @if (isFieldInvalid('ownerName')) {
+        <div class="invalid-feedback">
+      
+          @if (petForm.get('ownerName')?.errors?.['required']) {
+            El nombre del dueño es requerido
+          }
+          
+          @else if (petForm.get('ownerName')?.errors?.['minlength']) {
+            El nombre del dueño debe tener al menos 2 caracteres
+          }
+          @else if (petForm.get('ownerName')?.errors?.['maxlength']) {
+            El nombre del dueño no puede exceder 100 caracteres
+          }
+          @else if (petForm.get('ownerName')?.errors?.['pattern']) {
+            El nombre del dueño solo puede contener letras y espacios
+          }
+        </div>
+      }
+    </div>
+  </div>
+
+  <div class="d-flex justify-content-end gap-2 mt-3">
+    
+    <button type="button" class="btn btn-outline-secondary" (click)="onCancel()" [disabled]="isLoading">
+      <i class="bi bi-x-lg me-1"></i>
+      Cancelar
+    </button>
+    
+    <button type="submit" class="btn btn-danger" [disabled]="petForm.invalid || isLoading">
+    
+      @if (isLoading) {
+        <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+        Guardando...
+      } 
+      @else {
+        <i class="bi" [ngClass]="isEditing ? 'bi-check-lg' : 'bi-plus-lg'"></i>
+        {{ isEditing ? 'Actualizar' : 'Agregar' }}
+      }
+    </button>
+  
+  </div>
+</form>

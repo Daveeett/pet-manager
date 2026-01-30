@@ -1,0 +1,11 @@
+.form-label {
+  font-weight: 500;
+}
+
+.text-danger {
+  font-weight: bold;
+}
+
+.invalid-feedback {
+  display: block;
+}
