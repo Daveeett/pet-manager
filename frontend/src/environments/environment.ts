@@ -5,5 +5,5 @@ export const environment = {
 
 export const environmentProduction = {
   production: true,
-  apiUrl: '' 
+  apiUrl: 'pet-manager-production.up.railway.app' // ⬅️ Reemplaza con tu URL real
 };
