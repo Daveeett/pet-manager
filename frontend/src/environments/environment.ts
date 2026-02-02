@@ -5,5 +5,5 @@ export const environment = {
 
 export const environmentProduction = {
   production: true,
-  apiUrl: 'https://your-backend-url.railway.app/api' 
+  apiUrl: '' 
 };
