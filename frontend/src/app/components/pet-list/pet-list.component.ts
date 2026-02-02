@@ -59,7 +59,7 @@ export class PetListComponent implements OnInit, OnDestroy {
     
     this.searchSubject
       .pipe(
-        debounceTime(1000), // Espera 1000ms
+        debounceTime(1000), 
         distinctUntilChanged(), 
       )
       .subscribe(() => {
@@ -92,7 +92,7 @@ export class PetListComponent implements OnInit, OnDestroy {
       });
   }
 
-  //Busca mascotas por nombre
+  //emite el término de búsqueda
   onSearch(): void {
     this.searchSubject.next(this.searchTerm);
   }
@@ -150,7 +150,6 @@ export class PetListComponent implements OnInit, OnDestroy {
             );
             this.closeForm();
             this.isLoading = false;
-            // Recarga lista
             this.loadPets();
           },
           error: (error) => {
@@ -168,7 +167,6 @@ export class PetListComponent implements OnInit, OnDestroy {
           );
           this.closeForm();
           this.isLoading = false;
-          // Recarga lista
           this.loadPets();
         },
         error: (error) => {
@@ -194,7 +192,6 @@ export class PetListComponent implements OnInit, OnDestroy {
     modalRef.componentInstance.confirmText = "Eliminar";
     modalRef.componentInstance.cancelText = "Cancelar";
     modalRef.componentInstance.confirmClass = "btn-danger";
-
     modalRef.result.then(
       (confirmed) => {
         if (confirmed) {
@@ -212,7 +209,6 @@ export class PetListComponent implements OnInit, OnDestroy {
       next: () => {
         this.toastService.success(`${pet.name} ha sido eliminado exitosamente`);
         this.isLoading = false;
-        // Recarga lista
         this.loadPets();
       },
       error: (error) => {

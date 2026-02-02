@@ -49,7 +49,7 @@ export const getPetById = async (req: Request,res: Response,next: NextFunction):
         success: false,
         error: "Mascota no encontrada",
       };
-      res.status(404).json(response); //404 not found
+      res.status(404).json(response);
       return;
     }
 
@@ -64,9 +64,8 @@ export const getPetById = async (req: Request,res: Response,next: NextFunction):
 // Crea una nueva mascota con los datos proporcionados
 export const createPet = async (req: Request,res: Response,next: NextFunction): Promise<void> => {
   try {
-    const data: CreatePetRequest = req.body; //forma de recibir datos por body(en el cuerpo de la peticion)
+    const data: CreatePetRequest = req.body; 
 
-    // Validar si ya existe una mascota con los mismos datos
     if (petService.existsDuplicate(data)) {
       const response: ApiResponse<null> = {
         success: false,

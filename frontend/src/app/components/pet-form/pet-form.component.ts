@@ -78,8 +78,7 @@ export class PetFormComponent implements OnInit {
     this.updateFormValues(this.pet());
   }
 
-  private updateFormValues(petValue: Pet | null): void {
-    
+  private updateFormValues(petValue: Pet | null): void {    
     if (petValue && this.petForm) {
       this.petForm.patchValue({
         name: petValue.name,

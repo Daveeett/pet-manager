@@ -10,7 +10,6 @@ export const errorHandler = ( err: Error,_req: Request,res: Response,_next: Next
     error: err.message || "Error interno del servidor",
   };
 
-  // Determina el código de estado HTTP
   const statusCode = 500;
 
   res.status(statusCode).json(response);

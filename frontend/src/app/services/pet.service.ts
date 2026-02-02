@@ -17,11 +17,7 @@ export class PetService {
 
   constructor(private http: HttpClient) {}
 
-  getAllPets(
-    page: number = 1,
-    limit: number = 6,
-    search?: string,
-  ): Observable<PaginatedResponse<Pet>> {
+  getAllPets(page: number = 1, limit: number = 6, search?: string): Observable<PaginatedResponse<Pet>> {
     let params = new HttpParams()
       .set("page", page.toString())
       .set("limit", limit.toString());
@@ -41,11 +37,7 @@ export class PetService {
     );
   }
 
-  searchPets(
-    searchTerm: string,
-    page: number = 1,
-    limit: number = 6,
-  ): Observable<PaginatedResponse<Pet>> {
+  searchPets(searchTerm: string, page: number = 1, limit: number = 6): Observable<PaginatedResponse<Pet>> {
     return this.getAllPets(page, limit, searchTerm);
   }
 
@@ -141,5 +133,6 @@ export class PetService {
     console.error("Validation Details:", validationDetails);
 
     return throwError(() => new Error(errorMessage));
+    
   }
 }
