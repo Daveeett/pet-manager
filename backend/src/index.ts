@@ -7,11 +7,31 @@ import { ENV } from "./config/environment";
 const app: Application = express();
 const PORT = ENV.PORT;
 const HOST = ENV.HOST;
+
+const allowedOrigins = [
+  "http://localhost:4200",
+  "http://127.0.0.1:4200",
+  "https://pet-manager-frontend-production.up.railway.app"
+];
+
 app.use(
   cors({
-    origin: ["http://localhost:4200", "http://127.0.0.1:4200"],
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+      
+      if (origin.includes('.railway.app')) {
+        return callback(null, true);
+      }
+      
+      if (allowedOrigins.indexOf(origin) !== -1) {
+        callback(null, true);
+      } else {
+        callback(new Error('No permitido por CORS'));
+      }
+    },
     methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true
   }),
 );
 
